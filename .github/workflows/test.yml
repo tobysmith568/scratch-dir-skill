@@ -1,0 +1,44 @@
+name: test
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  lint:
+    name: Lint
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check scratch-hook.sh parses as POSIX sh
+        run: sh -n skills/scratch-dir/scripts/scratch-hook.sh
+
+      - name: shellcheck scratch-hook.sh against the sh dialect
+        run: shellcheck -s sh skills/scratch-dir/scripts/scratch-hook.sh
+
+      - name: Check SKILL.md frontmatter against the Agent Skills spec
+        run: sh tests/check-frontmatter.sh
+
+      - name: shellcheck check-frontmatter.sh against the sh dialect
+        run: shellcheck -s sh tests/check-frontmatter.sh
+
+  test:
+    strategy:
+      fail-fast: false
+      matrix:
+        os:
+          - ubuntu-latest
+          - macos-latest
+          - windows-latest
+
+    name: Test
+    runs-on: ${{ matrix.os }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Run scratch-hook tests
+        shell: bash
+        run: ./tests/run.sh
